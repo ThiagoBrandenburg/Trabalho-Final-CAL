@@ -1,4 +1,5 @@
 import System.Random
+import Data.mod
 
 myPureFunction :: Integer -> Integer
 myPureFunction x = x*x
@@ -9,8 +10,17 @@ rand_provisorio = fst (next (mkStdGen 1))
 randBigIntRange :: Integer -> Integer -> IO Integer
 randBigIntRange x y = getStdRandom (randomR (x,y))
 
-fatoracao :: Integer -> Integer
-fatoraca
+fatoracaoPorDois :: Integer -> Integer
+fatoracaoPorDois n =
+    aux (n-1)
+    where
+        aux :: Int -> Int
+        aux n =
+            let nx = n mod 2 
+            if nx mod 2 == 0 then
+                aux n/2
+            else
+                nx
         
 
 m_r_primalidade :: Integer -> Int -> Bool
@@ -21,8 +31,7 @@ m_r_primalidade 2 k =
 m_r_primalidade n 0 =
     True
 mr_primalidade n k =
-    
-
+    powMod (fa)
 
 
 
