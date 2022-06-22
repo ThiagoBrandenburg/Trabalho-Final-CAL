@@ -37,4 +37,5 @@ dicas replit haskell:
   rodar no shell:
     cabal update
     cabal install --lib random
+  import System.Random
   
