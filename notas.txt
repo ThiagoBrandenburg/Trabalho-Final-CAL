@@ -20,3 +20,22 @@ if x = n − 1 then
 continue WitnessLoop
 return “composite”
 return “probably prime”
+
+
+dicas replit haskell:
+  -> arquivo nix deve ser assim:
+ { pkgs }: {
+    deps = [
+        pkgs.haskellPackages.cabal-install
+        pkgs.cabal-install
+        (pkgs.haskellPackages.ghcWithPackages (pkgs: [
+            #cabal-install
+        ]))
+        pkgs.haskell-language-server
+    ];
+}
+  rodar no shell:
+    cabal update
+    cabal install --lib random
+  import System.Random
+  
