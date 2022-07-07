@@ -100,7 +100,7 @@ ehPrimo n k =
 --Gera um primo aleatorios no intervalo 2^k
 primo :: Integer -> Integer -> Integer
 primo k seed = 
-    let valor = randBigPow2 k in
+    let valor = randBigPow2 k seed in
         if mod valor 2 == 0 then aux (valor+1)
         else aux valor
     where
@@ -108,6 +108,16 @@ primo k seed =
         aux n = if m_r_primalidade n 10 == True then n
         else aux (n+2)
 
+--
+
+euclides_ext:: Integer -> Integer -> (Integer, Integer)
+euclides_ext x 0 = (1,0)--divisao por 0 sempre da 1 com resto 0
+euclides_ext x y = 
+    let
+        (quociente, resto) = quotRem x y --quotRem Retorna o valor da divisão e o resto em uma tupla
+        (novo_quociente, novo_resto) = euclides_ext y resto
+    in
+        (novo_resto, novo_quociente - quociente*novo_resto)--(old_r, r) := (r, old_r - quotient * r), renomeei old para atual e atual para novo
 
 
 main :: IO ()
@@ -117,6 +127,9 @@ main = do
     -- This "extracts" the float from IO Float and binds it to the name num
     print $ myPureFunction num 
 
+
+{-
 main2 = do
     g <- newStdGen
     print . take 10 
+-}
