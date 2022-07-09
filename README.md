@@ -10,7 +10,7 @@ Implementação de Potência Modular - ok
 
 Geração de Números Primos Aleatórios (Miller-Rabin + soma sequencial) - ok?
 
-Geração de Chaves Públicas e Privadas -
+Geração de Chaves Públicas e Privadas - ok
 
 Algoritmo de Euclides Estendido - ok
 

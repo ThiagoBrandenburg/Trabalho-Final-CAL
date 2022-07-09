@@ -1,34 +1,24 @@
+import System.IO
 import System.Random
-import Crypto.Random
+import Data.Char
 --import Data.mod
 --import Data.Mod.Word
+--import Crypto.Random
 
 {-
 Geração de Numeros Randomicos
 -}
-myPureFunction :: Integer -> Integer
-myPureFunction x = x*x
-
-rand_provisorio :: Int
-rand_provisorio = fst (next (mkStdGen 1))
-
---Esse é o que utilizamos
-{-
-randBigIntRange :: Integer -> Integer -> IO Integer
-randBigIntRange x y = getStdRandom (randomR (x,y))
--}
-
-
+--mkStdGen n é o gerador padrão de valores, declare um na main e passe por argumento
 --Retorna Inteiro entre x e y
-randBigRange :: Integer -> Integer -> Int -> Integer
-randBigRange x y n = let (z,w) = randomR (x,y) (mkStdGen n)
+-- StdGen = mkStdGen n
+-- na main = gen <- getStdGen
+randBigRange :: Integer -> Integer -> StdGen-> Integer
+randBigRange x y gen = let (z,w) = randomR (x,y) gen
     in z
 
-
-
 --retorna um Inteiro entre 0 e 2^n
-randBigPow2 :: Integer -> Integer -> Integer
-randBigPow2 k seed= randBigRange 0 (2^k) (fromIntegral seed)
+randBigPow2 :: Integer -> StdGen -> Integer
+randBigPow2 k gen = randBigRange 0 (2^k) gen
 
 {-
 ModPow a b c = retorna a^b mod c de forma otimizada
@@ -63,8 +53,6 @@ fatoracaoPorDois n =
             else (s,d)
         
 
---
-
 {-
 Teste de Primalidade de Miller Rabin
 Sendo n um numero e k o n de iteracoes, retorna
@@ -77,7 +65,7 @@ m_r_primalidade _ 0 =
 m_r_primalidade n k =
     let 
         (s,d) = fatoracaoPorDois n
-        a = randBigRange 2 (n-2) k -- d é um bom valor para seed, visto que d sempre será um numero diferente
+        a = randBigRange 2 (n-2) (mkStdGen k) -- d é um bom valor para seed, visto que d sempre será um numero diferente
         x = modPow a d n 1;
     in
         if x ==1 || x == (n-1) then m_r_primalidade n (k-1) -- Original era x ==1 || x == (n-1) = Continue, 
@@ -98,9 +86,9 @@ ehPrimo n k =
 
 
 --Gera um primo aleatorios no intervalo 2^k
-primo :: Integer -> Integer -> Integer
-primo k seed = 
-    let valor = randBigPow2 k seed in
+primo :: Integer -> StdGen -> Integer
+primo k gen = 
+    let valor = randBigPow2 k gen in
         if mod valor 2 == 0 then aux (valor+1)
         else aux valor
     where
@@ -108,8 +96,11 @@ primo k seed =
         aux n = if m_r_primalidade n 10 == True then n
         else aux (n+2)
 
---
 
+{-
+Algoritmo de Euclides Estendido
+seja mmd(a,b) = ax + by (sendo um dos valores negativos), retorna (a,b)
+-}
 euclides_ext:: Integer -> Integer -> (Integer, Integer)
 euclides_ext x 0 = (1,0)--divisao por 0 sempre da 1 com resto 0
 euclides_ext x y = 
@@ -120,16 +111,29 @@ euclides_ext x y =
         (novo_resto, novo_quociente - quociente*novo_resto)--(old_r, r) := (r, old_r - quotient * r), renomeei old para atual e atual para novo
 
 
-main :: IO ()
+
+--Retorna a chave pública e a privada ((n,e),(p,q,d))
+rsa_chave :: (Integer,Integer) -> ((Integer,Integer),(Integer,Integer,Integer))
+rsa_chave (p,q) =
+    let 
+        n = p*q
+        phi = (p-1)*(q-1)
+        e = aux 3 phi   -- e é o primo relativo de phi
+        d = if fator < 0 then fator+2*phi else fator
+        (fator,_) = euclides_ext e phi
+        aux k phi =
+            if gcd k phi > 1 then aux (k+2) phi
+            else k
+    in
+        ((n,e),(p,q,d))
+
+
+--Manipulação dos dados
+str_to_list_int :: String -> [Int]
+
+
+--main :: IO ()
 main = do
-    -- num :: Float
-    num <- randomIO :: IO Integer
-    -- This "extracts" the float from IO Float and binds it to the name num
-    print $ myPureFunction num 
-
-
-{-
-main2 = do
-    g <- newStdGen
-    print . take 10 
--}
+    gen <- newStdGen
+    print (primo 20 gen)
+    
