@@ -1,13 +1,10 @@
 import System.IO
 import System.Random
 import Data.Char
---import Data.mod
 --import Data.Mod.Word
 --import Crypto.Random
 
-{-
-Geração de Numeros Randomicos
--}
+--____GERACAO DE NUMEROS RANDOMICOS____________________________________________________________________
 --mkStdGen n é o gerador padrão de valores, declare um na main e passe por argumento
 --Retorna Inteiro entre x e y
 -- StdGen = mkStdGen n
@@ -40,7 +37,7 @@ modPow b e m r
     b' = b * b `mod` m
     e' = e `div` 2
 
-
+--____TESTES DE PRIMALIDADE______________________________________________________________
 --FatoracaoPorDois = Seja n impar na forma n=2⁽s⁾d + 1, retorna (s,d)
 fatoracaoPorDois :: Integer -> (Integer, Integer)
 fatoracaoPorDois n =
@@ -97,6 +94,7 @@ primo k gen =
         else aux (n+2)
 
 
+--____CRIPTOGRAFIA RSA_______________________________________________________________
 {-
 Algoritmo de Euclides Estendido
 seja mmd(a,b) = ax + by (sendo um dos valores negativos), retorna (a,b)
@@ -113,7 +111,7 @@ euclides_ext x y =
 
 
 --Retorna a chave pública e a privada ((n,e),(p,q,d))
-rsa_chave :: (Integer,Integer) -> ((Integer,Integer),(Integer,Integer,Integer))
+rsa_chave :: (Integer,Integer) -> ((Integer,Integer),(Integer,Integer))
 rsa_chave (p,q) =
     let 
         n = p*q
@@ -125,11 +123,30 @@ rsa_chave (p,q) =
             if gcd k phi > 1 then aux (k+2) phi
             else k
     in
-        ((n,e),(p,q,d))
+        ((n,e),(n,d))
 
+rsa_encripta :: (Integer,Integer) -> Integer -> Integer
+rsa_encripta (n,e) x = modPow x e n 1
 
---Manipulação dos dados
+rsa_decripta :: (Integer,Integer) -> Integer -> Integer
+rsa_decripta (n,d) x = modPow x d n 1
+
+--
+--Manipulação dos dados (ord:: Char -> Int) (chr :: Int -> Char)
 str_to_list_int :: String -> [Int]
+str_to_list_int (x:[]) = [ord x]
+str_to_list_int (x:xs) = ord x: str_to_list_int xs
+
+list_int_to_str :: [Int] -> String
+list_int_to_str (x:[]) = [chr x]
+list_int_to_str (x:xs) = chr x:list_int_to_str xs
+
+integer_to_String :: Integer -> String
+integer_to_String x = show x
+
+string_to_Integer :: String -> Integer
+string_to_Integer x = read x 
+
 
 
 --main :: IO ()
