@@ -3,7 +3,7 @@
 
 DESCRIÇÃO
 
-Este projeto desenvolvido por Thiago Brandenburg e Ana Veloy é o trabalho final da disciplina de Complexidade de Algoritmos, do curso de Ciência da Computação da Universidade do Estado de Santa Catarina (UDESC), ministrada pelo professor Cristiano Damiani Vasconcellos.
+Este projeto desenvolvido por Thiago Brandenburg e Ana Vedoy é o trabalho final da disciplina de Complexidade de Algoritmos, do curso de Ciência da Computação da Universidade do Estado de Santa Catarina (UDESC), ministrada pelo professor Cristiano Damiani Vasconcellos.
 
 O trabalho na implementação do algoritmo de criptografia RSA e também o método de força bruta para obtenção da chave do mesmo. Para tal, foi utilizado Haskell, uma das linguagens disponibilizadas para a realização do trabalho.
 
