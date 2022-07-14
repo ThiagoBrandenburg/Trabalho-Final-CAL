@@ -9,9 +9,21 @@ import Data.Char
 --Retorna Inteiro entre x e y
 -- StdGen = mkStdGen n
 -- na main = gen <- getStdGen
-randBigRange :: Integer -> Integer -> StdGen-> Integer
+randBigRange :: Integer -> Integer -> StdGen -> Integer
 randBigRange x y gen = let (z,w) = randomR (x,y) gen
     in z
+
+--Retorna *primo entre 2 na e 2 na n+1s
+primoRange2 :: Integer -> StdGen -> (Integer,Integer)
+primoRange2 n gen =
+    let 
+        k = 2^n
+        (a,gen2) = randomR (k,k*2) gen
+        (b,gen3) = randomR (k,k*2) gen
+        ax = proximo_primo a
+        bx = proximo_primo b
+    in
+        if ax == bx then (ax, proximo_primo (bx+2)) else (ax,bx) 
 
 --retorna um Inteiro entre 0 e 2^n
 randBigPow2 :: Integer -> StdGen -> Integer
@@ -71,8 +83,9 @@ m_r_primalidade n k =
             teste :: Integer -> Integer -> Integer -> Int -> Bool
             teste x n 0 k = False
             teste x n s k = 
-                if modPow x 2 n 1 == n-1 then m_r_primalidade n (k-1)
-                else teste x n (s-1) k
+                let x1 = modPow x 2 n 1 in
+                if x1 == n-1 then m_r_primalidade n (k-1)
+                else teste x1 n (s-1) k
    
     
 ehPrimo :: Integer -> Int -> Bool
@@ -89,6 +102,14 @@ primo k gen =
         if mod valor 2 == 0 then aux (valor+1)
         else aux valor
     where
+        aux :: Integer -> Integer
+        aux n = if m_r_primalidade n 10 == True then n
+        else aux (n+2)
+
+--
+proximo_primo :: Integer -> Integer
+proximo_primo n = if mod n 2 == 0 then proximo_primo (n+1) else
+    if m_r_primalidade n 10 == True then n else aux (n+2) where
         aux :: Integer -> Integer
         aux n = if m_r_primalidade n 10 == True then n
         else aux (n+2)
@@ -110,7 +131,7 @@ euclides_ext x y =
 
 
 
---Retorna a chave pública e a privada ((n,e),(p,q,d))
+--Retorna a chave pública e a privada ((n,e),(n,d))
 rsa_chave :: (Integer,Integer) -> ((Integer,Integer),(Integer,Integer))
 rsa_chave (p,q) =
     let 
@@ -131,7 +152,7 @@ rsa_encripta (n,e) x = modPow x e n 1
 rsa_decripta :: (Integer,Integer) -> Integer -> Integer
 rsa_decripta (n,d) x = modPow x d n 1
 
---
+
 --Manipulação dos dados (ord:: Char -> Int) (chr :: Int -> Char)
 str_to_list_int :: String -> [Int]
 str_to_list_int (x:[]) = [ord x]
@@ -141,16 +162,193 @@ list_int_to_str :: [Int] -> String
 list_int_to_str (x:[]) = [chr x]
 list_int_to_str (x:xs) = chr x:list_int_to_str xs
 
-integer_to_String :: Integer -> String
-integer_to_String x = show x
 
 string_to_Integer :: String -> Integer
-string_to_Integer x = read x 
+string_to_Integer x = 
+    let
+        aux :: String -> Integer
+        aux [] = 0
+        aux (x:xs) = 
+            let valor = toInteger (ord x) in valor + (128*(aux xs))
+    in
+        aux (reverse x)
+
+integer_to_String :: Integer -> String
+integer_to_String x =
+    let
+        aux :: Integer -> String
+        aux 0 = []
+        aux z = 
+            let
+                (quociente,resto) = quotRem z 128
+                y = chr (fromInteger resto)
+            in
+                y: aux quociente
+    in
+        reverse (aux x)
+
+--recebe uma lista, retorna a mesma fragmentada em uma listas de listas de tamanho n
+chuncks :: Int -> [a] -> [[a]]
+chuncks _ [] = []
+chuncks n x = 
+    (take n x) : chuncks n (drop n x)
+        
+{-
+Quebra de chave:
+O que queremos?
+    p e q, tal que p*q=n, e p e q são primos
+O que sabemos?
+    p,q < sqrt n
+    p,q não são pares
+-}
+lista_primos :: (Integer,Integer) -> [Integer]
+lista_primos (x0,x) = 
+    if mod x0 2 == 0 then aux (x0+1) (x-x0)
+    else aux (x0) (x-x0)
+    where
+        aux :: Integer -> Integer -> [Integer]
+        aux n (-1) = []
+        aux n 0 = []
+        aux n k = 
+            let nx = aux (n+2) (k-2)
+            in if m_r_primalidade n 10==True then n:nx else nx
+
+fatoracao :: Integer -> [Integer] -> (Integer,Integer)
+fatoracao n x = fatoracao2 n x (reverse x)
+    where
+        fatoracao2 :: Integer -> [Integer] -> [Integer] -> (Integer,Integer)
+        fatoracao2 n [] q = (-1,0)
+        fatoracao2 n (p:ps) (q:qs) =
+            if p>q then (0,0)
+            else
+                let 
+                    objetivo = p*q
+                in
+                    if objetivo == n then (p,q)
+                    else
+                        if objetivo>n then fatoracao2 n (p:ps) qs
+                        else fatoracao2 n ps (q:qs)
+
+--p é o menor da lista
+--q é o maior
+--se p*q é > n
+--então não existe outro p tal que p*q>n, porque p já é o menor
+
+rsa_forca_bruta :: (Integer,Integer) -> (Integer,Integer)
+rsa_forca_bruta (n,e) = fatoracao n (lista_primos(3,n))
 
 
 
+--____MANIPULAÇÂO DOS ARQUIVOS____________________________________________
 --main :: IO ()
-main = do
+--main_escreve_chave = Escreve as chaves publica e privada nos seus respectivos arquivos .key
+
+listaStrInteger :: [String] -> [Integer]
+listaStrInteger [] = []
+listaStrInteger (x:xs) = let y = string_to_Integer x in y:listaStrInteger xs
+
+
+main_chave :: Integer -> IO ()
+main_chave n = do
+    print "Geracao da Chave:"
+    leitorChavePublica <- openFile "chavePublica.key" WriteMode
+    leitorChavePrivada <- openFile "chavePrivada.key" WriteMode
     gen <- newStdGen
-    print (primo 20 gen)
     
+    let (p,q) = primoRange2 (quot n 2) gen
+        (c_publica,c_privada) = rsa_chave (p,q)
+    print $ "(p,q)=" ++ show (p,q) ++ ",(n,d)=" ++ show c_publica ++ ", (n,e)=" ++ show c_privada
+    hPutStrLn leitorChavePublica (show c_publica)
+    hPutStrLn leitorChavePrivada (show c_privada)
+    hClose leitorChavePublica
+    hClose leitorChavePrivada
+
+
+main_encripta = do
+    print "Encriptacao do Arquivo"
+    leitorPublica <- openFile "chavePublica.key" ReadMode
+    leitorArquivo <- openFile "texto_original.txt" ReadMode
+    leitorCript <- openFile "texto_encriptado.txt" WriteMode
+ 
+    chave <- hGetLine leitorPublica
+    conteudo <- hGetContents leitorArquivo
+    let (n,e) = read (chave) :: (Integer,Integer)
+        valores = map string_to_Integer (chuncks 1 conteudo)
+        valores_cript = map (rsa_encripta (n,e)) valores
+    
+    hPutStrLn leitorCript (show valores_cript)
+
+    hClose leitorPublica
+    hClose leitorArquivo
+    hClose leitorCript
+
+    print $ "Feito, resultado = " ++ show valores_cript
+
+
+main_decripta = do
+    print "Decriptacao do Arquivo:"
+    leitorPrivada <- openFile "chavePrivada.key" ReadMode
+    leitorEncript <- openFile "texto_encriptado.txt" ReadMode
+    leitorDecript <- openFile "texto_decriptado.txt" WriteMode
+
+    chave <- hGetLine leitorPrivada
+    conteudo <- hGetContents leitorEncript
+    let (n,d) = read (chave) :: (Integer,Integer)
+        valores = read conteudo :: [Integer]
+        valores_decript = map (rsa_decripta (n,d)) valores
+        texto_decript = map integer_to_String valores_decript
+        decript = concat texto_decript
+
+    hPutStrLn leitorDecript decript
+
+    hClose leitorPrivada
+    hClose leitorEncript
+    hClose leitorDecript
+
+    print decript
+
+main_quebra = do
+    print "Quebra da Chave:"
+    leitorPublica <- openFile "chavePublica.key" ReadMode
+    leitorEncript <- openFile "texto_encriptado.txt" ReadMode
+    leitorRsa <- openFile "texto_rsa_quebrado.txt" WriteMode
+
+    chave <- hGetLine leitorPublica
+    conteudo <- hGetContents leitorEncript
+    let (n,e) = read chave :: (Integer,Integer)
+        (p,q) = rsa_forca_bruta (n,e)
+        ((_,_),(n1,d)) = rsa_chave (p,q)
+        valores = read conteudo :: [Integer]
+        valores_decript = map (rsa_decripta (n1,d)) valores
+        texto_decript = concat $ map integer_to_String valores_decript
+    
+    print $ "Quebra Realizada, (p,q) = " ++ show (p,q) ++ ", " ++ texto_decript
+    hPutStrLn leitorRsa texto_decript
+
+    hClose leitorPublica
+    hClose leitorEncript
+    hClose leitorRsa
+
+main_limpa = do
+    l1 <- openFile "texto_encriptado.txt" WriteMode
+    l2 <- openFile "texto_decriptado.txt" WriteMode
+    l3 <- openFile "texto_rsa_quebrado.txt" WriteMode
+    
+    hPutStrLn l1 ""
+    hPutStrLn l2 ""
+    hPutStrLn l3 ""
+
+    hClose l1
+    hClose l2
+    hClose l3
+
+main = do
+    print "Trabalho CAL: Algoritmo RSA e quebra por forca bruta"
+    print "Digite a ordem de grandeza da chave rsa (2^input) ="
+    n <- getLine
+    let nx = read n :: Integer
+    main_chave nx
+    main_encripta
+    main_decripta
+    main_quebra
+    print "Execucao Finalizada"

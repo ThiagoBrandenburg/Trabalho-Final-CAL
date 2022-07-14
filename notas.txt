@@ -1,3 +1,20 @@
+Objetivos:
+
+Implementação Geração de Inteiros Grandes Aleatorios - OK
+
+Geração de Números Primos Aleatórios (Miller-Rabin + soma sequencial) - ok
+
+Geração de Chaves Públicas e Privadas - ok
+
+Algoritmo de Euclides Estendido - ok
+
+Função de Criptografar e descriptografar números primos (usando Potência Modular) - ok
+
+Função de Quebra de chave por força bruta - ok
+
+leitura de arquivo para quebra - ok
+
+
 https://www.seas.upenn.edu/~cis552/12fa/lectures/stub/RandomGen.html
 https://stackoverflow.com/questions/19594655/random-number-in-haskell
 
@@ -43,3 +60,6 @@ Exponenciação Modular feita em multiplas linguagem, incluindo Haskell
 https://rosettacode.org/wiki/Modular_exponentiation#Haskell
 
 ModPow 2988348162058574136915891421498819466320163312926952423791023078876139 2351399303373464486466122544523690094744975233415544072992656881240319 (10 ^ 40)
+
+
+:set +s        ===Faz com que mostre o tempo de execução
