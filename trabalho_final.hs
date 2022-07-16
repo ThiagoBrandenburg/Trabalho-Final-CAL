@@ -9,9 +9,6 @@ import Data.Char
 --Retorna Inteiro entre x e y
 -- StdGen = mkStdGen n
 -- na main = gen <- getStdGen
-randBigRange :: Integer -> Integer -> StdGen -> Integer
-randBigRange x y gen = let (z,w) = randomR (x,y) gen
-    in z
 
 --Retorna *primo entre 2 na e 2 na n+1s
 primoRange2 :: Integer -> StdGen -> (Integer,Integer)
@@ -27,7 +24,7 @@ primoRange2 n gen =
 
 --retorna um Inteiro entre 0 e 2^n
 randBigPow2 :: Integer -> StdGen -> Integer
-randBigPow2 k gen = randBigRange 0 (2^k) gen
+randBigPow2 k gen = let (x,_) = randomR (0,2^k) gen in x
 
 {-
 ModPow a b c = retorna a^b mod c de forma otimizada
@@ -74,7 +71,7 @@ m_r_primalidade _ 0 =
 m_r_primalidade n k =
     let 
         (s,d) = fatoracaoPorDois n
-        a = randBigRange 2 (n-2) (mkStdGen k) -- d é um bom valor para seed, visto que d sempre será um numero diferente
+        (a,_) = randomR (2,n-2) (mkStdGen k) -- d é um bom valor para seed, visto que d sempre será um numero diferente
         x = modPow a d n 1;
     in
         if x ==1 || x == (n-1) then m_r_primalidade n (k-1) -- Original era x ==1 || x == (n-1) = Continue, 
@@ -169,7 +166,7 @@ string_to_Integer x =
         aux :: String -> Integer
         aux [] = 0
         aux (x:xs) = 
-            let valor = toInteger (ord x) in valor + (128*(aux xs))
+            let valor = toInteger (ord x) in valor + (256*(aux xs))
     in
         aux (reverse x)
 
@@ -180,7 +177,7 @@ integer_to_String x =
         aux 0 = []
         aux z = 
             let
-                (quociente,resto) = quotRem z 128
+                (quociente,resto) = quotRem z 256
                 y = chr (fromInteger resto)
             in
                 y: aux quociente
@@ -249,13 +246,13 @@ listaStrInteger (x:xs) = let y = string_to_Integer x in y:listaStrInteger xs
 
 
 main_chave :: Integer -> IO ()
-main_chave n = do
+main_chave bits = do
     print "Geracao da Chave:"
     leitorChavePublica <- openFile "chavePublica.key" WriteMode
     leitorChavePrivada <- openFile "chavePrivada.key" WriteMode
     gen <- newStdGen
     
-    let (p,q) = primoRange2 (quot n 2) gen
+    let (p,q) = primoRange2 (quot bits 2) gen
         (c_publica,c_privada) = rsa_chave (p,q)
     print $ "(p,q)=" ++ show (p,q) ++ ",(n,d)=" ++ show c_publica ++ ", (n,e)=" ++ show c_privada
     hPutStrLn leitorChavePublica (show c_publica)
@@ -264,7 +261,7 @@ main_chave n = do
     hClose leitorChavePrivada
 
 
-main_encripta = do
+main_encripta bits = do
     print "Encriptacao do Arquivo"
     leitorPublica <- openFile "chavePublica.key" ReadMode
     leitorArquivo <- openFile "texto_original.txt" ReadMode
@@ -273,7 +270,8 @@ main_encripta = do
     chave <- hGetLine leitorPublica
     conteudo <- hGetContents leitorArquivo
     let (n,e) = read (chave) :: (Integer,Integer)
-        valores = map string_to_Integer (chuncks 1 conteudo)
+        tamanho_ascii = quot bits 8
+        valores = map string_to_Integer (chuncks tamanho_ascii conteudo)
         valores_cript = map (rsa_encripta (n,e)) valores
     
     hPutStrLn leitorCript (show valores_cript)
@@ -346,9 +344,12 @@ main = do
     print "Trabalho CAL: Algoritmo RSA e quebra por forca bruta"
     print "Digite a ordem de grandeza da chave rsa (2^input) ="
     n <- getLine
+    print "Digite a ordem de grandeza dos chuncks (2^(8*input)"
+    k <- getLine
     let nx = read n :: Integer
+        kx = read k :: Int
     main_chave nx
-    main_encripta
+    main_encripta kx
     main_decripta
     main_quebra
     print "Execucao Finalizada"
