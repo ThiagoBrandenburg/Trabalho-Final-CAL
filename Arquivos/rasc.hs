@@ -133,3 +133,21 @@ not_main2 = do
     leitor <- openFile "texto_original.txt" ReadMode
     conteudo <- hGetContents leitor
     print (lines conteudo)
+
+fatoracao :: Integer -> [Integer] -> (Integer,Integer)
+fatoracao n x = fatoracao2 n x (reverse x)
+    where
+        fatoracao2 :: Integer -> [Integer] -> [Integer] -> (Integer,Integer)
+        fatoracao2 n [] q = (-1,0)
+        fatoracao2 n (p:ps) (q:qs) =
+            if p>q then (0,0)
+            else
+                let 
+                    objetivo = p*q
+                in
+                    if objetivo == n then (p,q)
+                    else
+                        if objetivo>n then fatoracao2 n (p:ps) qs
+                        else fatoracao2 n ps (q:qs)
+--rsa_forca_bruta (n,e) = fatoracao n (lista_primos(3,n))
+--rsa_forca_bruta (n,e) = rsa_fatoracao n (3,n)

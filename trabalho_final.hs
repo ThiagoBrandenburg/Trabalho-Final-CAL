@@ -36,6 +36,7 @@ modPow a b c =
     if mod e 2 == 1 then
         modPow 
 -}
+
 modPow :: Integer -> Integer -> Integer -> Integer -> Integer
 modPow b e 1 r = 0
 modPow b 0 m r = r
@@ -111,6 +112,17 @@ proximo_primo n = if mod n 2 == 0 then proximo_primo (n+1) else
         aux n = if m_r_primalidade n 10 == True then n
         else aux (n+2)
 
+primo_seguinte :: Integer -> Integer
+primo_seguinte n = if mod n 2 == 0 then aux (n+1) else (n+2)
+    where
+        aux :: Integer -> Integer
+        aux n = if m_r_primalidade n 10 == True then n else aux (n+2)
+
+primo_anterior :: Integer -> Integer
+primo_anterior n = if mod n 2 == 0 then aux (n-1) else aux (n-2)
+    where
+        aux :: Integer -> Integer
+        aux n = if m_r_primalidade n 10 == True then n else aux (n-2)
 
 --____CRIPTOGRAFIA RSA_______________________________________________________________
 {-
@@ -210,29 +222,28 @@ lista_primos (x0,x) =
             let nx = aux (n+2) (k-2)
             in if m_r_primalidade n 10==True then n:nx else nx
 
-fatoracao :: Integer -> [Integer] -> (Integer,Integer)
-fatoracao n x = fatoracao2 n x (reverse x)
-    where
-        fatoracao2 :: Integer -> [Integer] -> [Integer] -> (Integer,Integer)
-        fatoracao2 n [] q = (-1,0)
-        fatoracao2 n (p:ps) (q:qs) =
-            if p>q then (0,0)
-            else
-                let 
-                    objetivo = p*q
-                in
-                    if objetivo == n then (p,q)
-                    else
-                        if objetivo>n then fatoracao2 n (p:ps) qs
-                        else fatoracao2 n ps (q:qs)
-
 --p é o menor da lista
 --q é o maior
 --se p*q é > n
 --então não existe outro p tal que p*q>n, porque p já é o menor
 
+
+
 rsa_forca_bruta :: (Integer,Integer) -> (Integer,Integer)
-rsa_forca_bruta (n,e) = fatoracao n (lista_primos(3,n))
+rsa_forca_bruta (n,e) = rsa_fat n (3,n)
+
+rsa_fat :: Integer -> (Integer,Integer) -> (Integer,Integer)
+rsa_fat n (a,b) = 
+  if mod a 2 ==0 then rsa_fat n (a+1,b) else
+  if mod b 2 ==0 then rsa_fat n (a,b-1) else
+  aux n (a,b)
+  where
+      aux n (a,b) =
+        if a > b then (0,0) else
+        let nx = a*b in if nx == n then (a,b) else
+            if nx > n then aux n (a,b-2) else aux n (a+2,b)
+
+
 
 
 
